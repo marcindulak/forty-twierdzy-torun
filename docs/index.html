@@ -1,0 +1,1838 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- Non-standard hints that nudge some Android browsers toward landscape. -->
+  <meta name="screen-orientation" content="landscape">
+  <meta name="x5-orientation" content="landscape">
+  <!-- Enables fullscreen mode when added to iOS/Android home screen,
+       which is a prerequisite for screen.orientation.lock() on some platforms. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Forty Twierdzy Toruń</title>
+  <link rel="icon" href="data:,">
+
+  <!-- Reveal.js core -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/reveal.css">
+
+  <!-- MapLibre GL JS for map. integrity: sha384 of this exact pinned file,
+       cross-checked against the same file extracted from the npm registry's
+       own tarball; recalculate if the version below ever changes. -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.1.0/dist/maplibre-gl.css" integrity="sha384-Gy41S0IRKagep76pE/h7l/Ptg2JLgQzXwshjlqZOghGGDeDKuJyxmCndqvWZ/vLm" crossorigin="anonymous"/>
+
+  <!-- EMBEDDED CSS -->
+  <style>
+    /* Every color used anywhere on this page, named after the color itself
+       (not what it is used for), defined once here as rgba() rather than
+       repeated as literal values throughout the stylesheet. rgba(), not
+       hex or plain rgb(), so every entry, opaque or transparent, uses the
+       one format that carries an explicit alpha channel. */
+    :root {
+      --khaki: rgba(150, 136, 95, 1);
+      --khaki-dark: rgba(122, 109, 80, 1);
+      --khaki-light: rgba(184, 168, 123, 1);
+      --khaki-lightest: rgba(192, 182, 155, 1);
+      --white: rgba(255, 255, 255, 1);
+      --black: rgba(0, 0, 0, 1);
+      --orange: rgba(245, 165, 36, 1);
+      --brown: rgba(30, 26, 18, 1);
+      --brick: rgba(160, 82, 55, 1);
+      --brick-dark: rgba(110, 55, 38, 1);
+      --mortar: rgba(196, 189, 178, 1);
+      /* Zwiedzanie ("visitable") status colors, both checked (via the WCAG 2.2
+         relative-luminance formula, not by eye) for the 4.5:1 contrast its own
+         AA normal-text minimum requires against the page's own dark
+         background (--brown): --green measures 7.33:1, --red measures 4.97:1. */
+      --green: rgba(102, 187, 106, 1);
+      --red: rgba(239, 83, 80, 1);
+      /* Opacity tints of the solid colors above, or of a color used nowhere
+         else at full opacity (--green-dark). Named by their own base color
+         plus the exact opacity percentage, so a reader can tell two
+         tints' own relative transparency apart from the name alone. */
+      --orange-60: rgba(245, 165, 36, 0.6);
+      --black-20: rgba(0, 0, 0, 0.2);
+      --black-30: rgba(0, 0, 0, 0.3);
+      --black-40: rgba(0, 0, 0, 0.4);
+      --black-55: rgba(0, 0, 0, 0.55);
+      --black-60: rgba(0, 0, 0, 0.6);
+      --white-85: rgba(255, 255, 255, 0.85);
+      --green-dark-40: rgba(45, 80, 22, 0.4);
+      --green-dark-85: rgba(45, 80, 22, 0.85);
+    }
+
+    html, body {
+      overscroll-behavior: none;
+    }
+
+    html {
+      height: 100dvh;
+    }
+
+    /* Fix the body to the viewport so the document itself can never
+       scroll. A page that cannot scroll gives mobile browsers no reason to
+       collapse or expand the URL bar on finger movements, which keeps the
+       viewport size stable. The rule is inert on desktop because the content
+       already fits the viewport, so the same code serves every platform. */
+    body {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Dark warm-brown background applied at every layer Reveal.js uses,
+       because backgroundColor in Reveal.initialize only sets an inline
+       style on .reveal-viewport after JS runs, which reveal.css may
+       temporarily override, and .slide-background elements are separate. */
+    body,
+    .reveal-viewport,
+    .reveal .slide-background {
+      background-color: var(--brown);
+    }
+
+    .reveal {
+      font-family: "Source Sans Pro", Helvetica, sans-serif;
+      font-size: 32px;
+      color: var(--white);
+      /* Shared box for the return button, fort title, and nav arrows: same
+         top/height, each centers its own content via display:flex, so all
+         three align without a hand-computed offset per element. */
+      --fort-header-top: 20px;
+      --fort-header-height: 60px;
+      /* navigate-left's/navigate-right's own right offsets and rendered
+         size (3.6em of .controls's font-size below); .fort-slide h3's own
+         right offset is calc()'d from --fort-arrow-outer-offset and
+         --fort-arrow-size, so it stays clear of the arrows if either
+         changes, instead of a separately chosen constant. */
+      --fort-arrow-inner-offset: 20px;
+      /* 64 canvas px * 0.375 (the scale at 480x280, the project's own
+         shortest supported real device) = 24px real, the WCAG 2.2 SC
+         2.5.8 minimum touch target size. */
+      --fort-arrow-size: 64px;
+      /* navigate-left's own right offset: inner offset plus the arrow's
+         own size, so the two arrows sit edge to edge at any size rather
+         than a separately fitted number that could let them overlap. */
+      --fort-arrow-outer-offset: calc(var(--fort-arrow-inner-offset) + var(--fort-arrow-size));
+    }
+
+    /* h2 (map slide's own title) and h3 (each fort slide's own title): the
+       map slide's title is this page's own highest-level visible heading,
+       so it stays one level above a fort slide's title rather than the two
+       sharing one level, per WCAG 2.2's own heading-hierarchy guidance. */
+    .reveal h2, .reveal h3 {
+      font-family: "Source Sans Pro", Helvetica, sans-serif;
+      text-transform: none;
+      color: var(--orange);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .reveal h2 { font-size: 48pt; }
+    /* Smaller than the map slide's own h2, to accommodate longer fort
+       titles on one line in the row shared with the return button and nav
+       arrows; sized against the longest name in fortificationData, not
+       just the currently visible forts. */
+    .reveal h3 { font-size: 26pt; }
+    .reveal p, .reveal li {
+      font-size: 18pt;
+      line-height: 1.5;
+    }
+
+    .reveal a {
+      color: var(--khaki);
+      text-decoration: underline;
+    }
+
+    .reveal a:hover {
+      color: var(--khaki-dark);
+    }
+
+    /* Reveal.js's default navigation arrows compute to white, which is nearly
+       invisible against both the pale map tiles and, at wide viewports, the
+       dark brown letterbox margin around the scaled slide canvas (confirmed
+       via computed-style checks with the project's puppeteer container).
+       Recolored to the same accent orange used for the headings; the back
+       (navigate-left) arrow is a fainter version of that color so its
+       direction reads as secondary to the forward (navigate-right) arrow.
+       Reveal.js detects the dark page background and adds a
+       has-dark-background class to .reveal, which carries its own
+       higher-specificity white .controls color rule (three classes vs. two);
+       the selector below is repeated with that class so ours wins instead. */
+    .reveal .controls,
+    .reveal.has-dark-background .controls {
+      color: var(--orange);
+    }
+
+    /* font-size (the arrows' own 3.6em basis) is derived from
+       --fort-arrow-size rather than stated independently, so the two
+       can't drift apart. */
+    .reveal .controls {
+      font-size: calc(var(--fort-arrow-size) / 3.6);
+    }
+
+    .reveal .controls .navigate-left {
+      color: var(--orange-60);
+    }
+
+    /* Moved from reveal.css's own default bottom-right cluster to a fixed
+       bar at the top of the viewport: at the bottom, the arrows sometimes
+       overlapped a fort slide's own description text. .controls is moved
+       into .slides at runtime (see moveControlsIntoSlides) specifically so
+       these plain px values get the same scale transform as the fort
+       title/return button automatically, instead of staying real screen
+       pixels; a CSS transform on an ancestor becomes the containing block
+       for a fixed-position descendant, which is what makes that work.
+       navigate-up/navigate-down are hidden rather than repositioned: this
+       presentation has no vertical slide stacks, so both are always inert. */
+    .reveal .controls .navigate-up,
+    .reveal .controls .navigate-down {
+      display: none;
+    }
+
+    /* Repeated with :not(.has-vertical-slides), matching reveal.css's own
+       .reveal:not(.has-vertical-slides) .controls .navigate-left/right
+       rule's specificity (this presentation has no vertical slides, so
+       that rule always applies and otherwise wins the top/bottom fight
+       below): without this, its own bottom:1.4em stayed active alongside
+       this rule's top:20px, and a position:fixed element with both top and
+       bottom set stretches to fill the gap between them instead of sizing
+       to its own content, confirmed with the project's puppeteer container
+       (a ~1000px tall invisible hit-target instead of a 36px arrow). */
+    .reveal .controls .navigate-left,
+    .reveal .controls .navigate-right,
+    .reveal:not(.has-vertical-slides) .controls .navigate-left,
+    .reveal:not(.has-vertical-slides) .controls .navigate-right {
+      position: fixed;
+      /* Centered on the same --fort-header row as the button/title (see
+         .reveal above): the arrow can't take an explicit height itself
+         without distorting its own 3.6em-square glyph, so this subtracts
+         half of that (1.8em, in the arrow's own font-size) instead, which
+         stays correct if .controls's font-size (arrow size) ever changes. */
+      top: calc(var(--fort-header-top) + var(--fort-header-height) / 2 - 1.8em);
+      bottom: auto;
+      transform: none;
+    }
+
+    .reveal .controls .navigate-left,
+    .reveal:not(.has-vertical-slides) .controls .navigate-left {
+      left: auto;
+      right: var(--fort-arrow-outer-offset);
+    }
+
+    .reveal .controls .navigate-right,
+    .reveal:not(.has-vertical-slides) .controls .navigate-right {
+      right: var(--fort-arrow-inner-offset);
+    }
+
+    .reveal .slides section {
+      width: 100%;
+      height: 100%;
+      padding: 60px;
+    }
+
+    /* reveal.css hides every slide by default (.reveal .slides>section{display:none},
+       specificity 0,2,1) and only shows the current one via
+       .reveal .slides>section.present{display:block} (specificity 0,3,1, the extra
+       .present class). Matching that .present scope and specificity here, instead of
+       setting display:flex unconditionally above, is required: an unconditional
+       display:flex on every section has the same specificity (0,2,1) as reveal.css's
+       own hiding rule but sits later in the cascade, so it used to win the tie and show
+       every slide, stacked in normal document flow, for the ~0.3-0.5s between the
+       browser parsing this markup and Reveal.initialize() finishing and assigning the
+       present/past/future classes. */
+    .reveal .slides section.present {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Map slide styles */
+    #map-slide {
+      padding: 0 !important;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map-slide h2 {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      margin: 0;
+      z-index: 10;
+      font-size: 32pt;
+    }
+
+    #map {
+      position: absolute;
+      top: 100px;
+      left: 0;
+      width: 100%;
+      height: calc(100% - 100px - 30px);
+    }
+
+    /* Thin strip at the bottom of the map slide that guarantees the
+       MapLibre attribution is never clipped by the slide boundary on
+       screens with varying aspect ratios. */
+    .map-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background-color: var(--brown);
+    }
+
+    /* Fortification description slides */
+    .fort-slide {
+      /* Reveal.js gives sections position:absolute but leaves top:auto, so the browser
+         uses each section's hypothetical static position. Because #map-slide has
+         position:relative it occupies 720 px in the normal flow, pushing every fort
+         slide's static position to y=720 — one full slide below the viewport. Setting
+         top:0 and left:0 explicitly overrides top:auto and keeps fort slides at the
+         origin that Reveal.js's container transform expects. */
+      top: 0;
+      left: 0;
+      /* Clears the button/title/arrows row below (top:20px + height:60px,
+         see --fort-header-* on .reveal) plus a 25px gap, now that the
+         title moved into that row instead of stacking below it (see
+         .fort-slide h3 below), leaving the rest of the fixed-height canvas
+         to the description text. */
+      padding-top: 105px !important;
+      /* Override the inherited justify-content:center so the heading is always visible
+         at the top of the slide rather than potentially scrolled out of the clipped viewport. */
+      justify-content: flex-start !important;
+    }
+
+    /* Same row as the return button and nav arrows rather than stacked
+       below them, freeing that space for the description below. right is
+       calc()'d from the same --fort-arrow-* properties that position
+       navigate-left, plus a 20px gap, so it stays clear of the arrows if
+       either one changes rather than a separately chosen constant. width
+       is relative so it clears the button on every viewport without
+       pinning an exact left edge to the button's own measured width. */
+    .fort-slide h3 {
+      position: absolute;
+      top: var(--fort-header-top);
+      height: var(--fort-header-height);
+      right: calc(var(--fort-arrow-outer-offset) + var(--fort-arrow-size) + 20px);
+      width: 60%;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .return-button {
+      position: absolute;
+      top: var(--fort-header-top);
+      height: var(--fort-header-height);
+      display: flex;
+      align-items: center;
+      left: 40px;
+      padding: 0 28px;
+      background-color: var(--khaki);
+      color: var(--white);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 20pt;
+      font-weight: 600;
+    }
+
+    .return-button:hover {
+      background-color: var(--khaki-dark);
+    }
+
+    /* display:grid with fr track units, not flex with percentage flex-basis:
+       a flex row's own percentage flex-basis, and a grid's own percentage
+       track size, are both resolved against the container's full
+       content-box width with no automatic adjustment for the gap between
+       items, so a plain 40%/60% split already sums to the full container
+       width and the 40px gap then pushes .fort-text 40px past
+       .fort-content's own right edge (confirmed both ways with the
+       project's puppeteer container: getBoundingClientRect() showed
+       exactly that same 40px, scaled by Reveal's own transform, at every
+       tested viewport, whether flex-basis or a grid percentage track was
+       used). fr units are different: by definition they distribute
+       whatever space remains after every gap and every fixed-size track is
+       already subtracted, so 2fr/3fr (the same 40/60 ratio) sums, together
+       with the 40px gap between them, to exactly 100% with no manual pixel
+       offset, confirmed the same way (zero overflow at every tested
+       viewport). */
+    .fort-content {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .fort-image img {
+      /* display: block, not the <img> default of inline: an inline replaced
+         element reserves descender space below itself within its own line
+         box, which made .fort-photo's own height (and so .fort-video-badge's
+         own bottom: 8px, anchored to that height) run a few pixels taller
+         than the photo's own true visible bottom edge, making the badge's
+         bottom inset visibly smaller than its left inset despite both being
+         coded as the same 8px. */
+      display: block;
+      width: 100%;
+      /* Fixed, not max-height: max-height left each photo at its own
+         natural, aspect-ratio-dependent size, causing the taller-aspect
+         forts to render noticeably taller than others. 320px is verified
+         to leave room for the longest Kontakt text across all 15 forts. */
+      height: 320px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px var(--black-20);
+    }
+
+    /* Selector is .reveal .fort-description, not just .fort-description,
+       so this rule outranks the earlier .reveal p, .reveal li rule instead
+       of losing to it (see .reveal .fort-meta below for the same fix). */
+    .reveal .fort-description {
+      font-size: 20pt;
+      line-height: 1.6;
+      /* No top margin: the <h3> that used to sit in-flow above this
+         paragraph is now absolutely positioned into the header row (see
+         .fort-slide h3), so this is .fort-text's own first in-flow child
+         and a top margin would only misalign it against .fort-image's own
+         flush top edge, not create space below a heading that is no
+         longer there. */
+      margin: 0 0 20px 0;
+      /* reveal.css's own .reveal default is text-align:center; left-aligned
+         here so sentences break naturally at the browser's own word-wrap
+         points instead of each line being centered individually. */
+      text-align: left;
+    }
+
+    /* Visitable/address/contact lines generated from fortificationData below
+       the image (see appendFortSlide()'s own comment for why that column, not
+       the text column), one per known field (a fort with no contact info
+       skips that line rather than showing an empty one). Sized and colored
+       like .image-credit below, since these are secondary metadata rather
+       than the slide's own descriptive text.
+       Selector is .reveal .fort-meta, not just .fort-meta, to outrank
+       .reveal p, .reveal li above (0,1,1 specificity: one class plus one
+       element) the same way this file's own reveal.js integration notes
+       already document doing elsewhere for a similar specificity fight
+       (see "Preventing every slide from flashing visible" in README.md): a
+       plain .fort-meta (0,1,0) lost to that rule regardless of its own
+       font-size value, silently rendering every meta line at .reveal p's
+       flat 18pt no matter what was declared here, confirmed by reading
+       getComputedStyle() directly rather than assuming a source-order fix
+       would be enough. 20pt, a bit larger than that true previous 18pt,
+       applies uniformly to Adres/Zwiedzanie/Kontakt: an earlier version of
+       this rule sized Zwiedzanie larger than the other two via a separate
+       .fort-visitable rule, since removed so all three meta lines read as
+       one consistent size. */
+    .reveal .fort-meta {
+      font-size: 20pt;
+      color: var(--khaki-light);
+      margin: 4px 0;
+      /* reveal.css's own .reveal default is text-align:center; left-aligned
+         here instead so a long value (e.g. a Kontakt line with both a phone
+         number and an email address) has the image column's own full width
+         to grow into on one side, rather than centering and eating into the
+         margin on both sides equally. */
+      text-align: left;
+    }
+
+    .fort-meta strong {
+      color: var(--white);
+    }
+
+    .fort-visitable-yes {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .fort-visitable-no {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    /* Overlaid on the fort photo's own bottom-left corner, diagonal from
+       .image-credit's own top-right Wikimedia badge below, rather than
+       placed beside the Zwiedzanie/Adres/Kontakt lines: an earlier version
+       did that and the thumbnail ended up looking low and unbalanced,
+       since those lines vary from 2 to 4 lines fort to fort (Kontakt is 0,
+       1, or 2 lines depending on the fort) while the thumbnail's own height
+       stayed fixed, so nothing had a stable line to align against. Overlaid
+       on the photo instead, it never has to align with metadata text at
+       all, regardless of how long Kontakt is for a given fort.
+       width: 30% is set here, not on .fort-video-thumb below, because a
+       percentage width only resolves against a definite containing-block
+       width: this element (position: absolute, with left set but not
+       right) is the one whose containing block is .fort-image's own
+       definite, resolved width; putting the percentage on
+       .fort-video-thumb instead (an earlier version did, sized against this
+       flex column's own then-undefined auto width) made browsers fall back
+       to a shrink-to-fit width nearly as wide as .fort-image itself. 30%,
+       not the first version's 40%: cropping .fort-video-thumb below to 1:1
+       (see that class's own comment) made the same 40% width noticeably
+       larger overall (taller, and more zoomed into the presenter's own
+       portrait) than the previous 4:3 version, so the width is reduced by a
+       further quarter (40% * 0.75 = 30%) on top of that crop.
+       bottom: 8px; left: 8px, the same inset .image-credit above uses on
+       its own opposite corner, for a floating "picture-in-picture" look
+       rather than a flush-cornered one, which read as stuck to the photo's
+       own edge rather than deliberately placed. */
+    .fort-video-badge {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      width: 30%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* --orange, the same color .reveal h2/h3 and the map slide's own
+       heading already use. The previous var(--khaki-dark) was too close to
+       the surrounding photo's own dark tones to read at all.
+       Selector is .reveal .fort-video-label, not just .fort-video-label,
+       so this rule outranks the earlier .reveal p, .reveal li rule instead
+       of losing to it (see .reveal .fort-meta below for the same fix). */
+    .reveal .fort-video-label {
+      margin: 0;
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--orange);
+    }
+
+    /* A plain YouTube thumbnail image, not the iframe embed this project used
+       before: the iframe's own initial "cued" state always draws a large
+       play-button icon centered over the whole frame, which on this
+       project's own fort videos (a presenter shown mid-frame, not B-roll)
+       covered exactly the face the thumbnail was meant to show. The
+       thumbnail image itself carries no such overlay, so a small corner
+       .play-badge below is added instead, deliberately not centered.
+       aspect-ratio: 1/1, not the source hqdefault.jpg's own 4:3 (480x360):
+       sampling the actual pixels of this project's own four thumbnails
+       (a same-origin canvas read of each downloaded image, avoiding the
+       cross-origin canvas restriction a live img src triggers) found an
+       identical 59px solid-black bar on each side of all four, baked into
+       the channel's own thumbnail template rather than added by this
+       project's own CSS. object-fit: cover into a 1:1 box crops the 480-wide
+       source down to its own central 360px, which lands almost exactly on
+       that measured 59px boundary (480 - 59*2 = 362, 2px from 360), so the
+       bars disappear without cutting into the presenter's own portrait. A
+       white border separates the thumbnail from whatever part of the fort's
+       own photo is directly behind it, reinforcing the floating
+       "picture-in-picture" look .fort-video-badge's own inset positioning
+       is going for. width: 100% (of .fort-video-badge, see that class's own
+       comment for why the percentage lives there instead). */
+    .fort-video-thumb {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 2px solid var(--white-85);
+      box-shadow: 0 2px 8px var(--black-40);
+    }
+
+    .fort-video-thumb:hover {
+      border-color: var(--orange);
+    }
+
+    .fort-video-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Bottom-right corner only, unlike the iframe embed's own centered play
+       button (see .fort-video-thumb above), so it signals "this is a video"
+       without sitting over the presenter's face. Styled after .image-credit
+       below: same dark semi-transparent badge language already used for the
+       Wikimedia credit on the main photo. */
+    .play-badge {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: var(--black-60);
+      color: var(--white);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Portrait overlay — shown via @media below; hidden by default. */
+    #portrait-warning {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: var(--brown);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      padding: 40px;
+      font-family: "Source Sans Pro", Helvetica, sans-serif;
+    }
+
+    /* color set explicitly, not inherited from .reveal h2: #portrait-warning
+       is a sibling of .reveal (see .glossary-frame's own comment above for
+       the same reasoning), so that descendant selector never reaches here. */
+    /* 25pt: measured to wrap "Forty Twierdzy Toruń" onto two lines at
+       300px, this project's own narrowest supported portrait width (17pt
+       is the largest size that keeps it on one line there), kept anyway
+       for visual size at the cost of wrapping on the narrowest screens. */
+    #portrait-warning h2 {
+      margin: 0;
+      font-size: 30pt;
+      line-height: 1.2;
+      color: var(--orange);
+    }
+
+    /* Sized off vh, not vw: this overlay is a sibling of .reveal (see
+       .glossary-frame's own comment above for the same reasoning), and
+       aspect-ratio keeps it at the source SVG's own 1280:987 proportions
+       regardless of the sizing unit. */
+    #portrait-warning .rotate-icon {
+      width: 20vh;
+      max-width: 70vw;
+      aspect-ratio: 1280 / 987;
+      /* The wiggle animation below swings the icon's own bounding box
+         wider than its resting size; margin keeps that swing clear of the
+         title above and the "Obróć poziomo" text below at every point in
+         the animation, not just at rest. */
+      margin-top: 5vh;
+      margin-bottom: 5vh;
+      /* Small back-and-forth wiggle, not a full 90° flip: mimes the
+         rotation gesture without disorienting a large, detailed icon. */
+      animation: hint-rotate 2.25s ease-in-out infinite;
+    }
+
+    @keyframes hint-rotate {
+      0%, 100% { transform: rotate(0deg); }
+      50%       { transform: rotate(15deg); }
+    }
+
+    #portrait-warning p {
+      color: var(--khaki-lightest);
+      font-size: 20pt;
+      margin: 0;
+    }
+
+    #portrait-warning p.subtitle {
+      color: var(--khaki-light);
+      font-size: 14pt;
+    }
+
+    /* On small portrait screens, show the overlay and hide the presentation. */
+    @media screen and (orientation: portrait) {
+      #portrait-warning { display: flex; }
+      .reveal          { display: none; }
+    }
+
+    /* The reveal.js .reveal a rule sets color and text-decoration on all anchors,
+       which bleeds into the MapLibre attribution links (underlined, primary-color
+       text). Reset those properties explicitly for the attribution control. Also
+       sets color on the container itself, not just its anchors: plain text in the
+       attribution string that sits outside any <a> (e.g. "Data from" before the
+       OpenStreetMap link) otherwise keeps inheriting the page's own white text
+       color, invisible against the attribution control's own light background. */
+    .maplibregl-ctrl-attrib {
+      color: var(--black);
+    }
+
+    .maplibregl-ctrl-attrib a {
+      color: var(--black);
+      text-decoration: none;
+    }
+
+    /* Compensate the zoom control for Reveal.js's CSS transform scale, so
+       it keeps its intended physical size (and WCAG tap-target size) on
+       screen regardless of viewport. */
+    .maplibregl-ctrl-group {
+      zoom: var(--map-counter-zoom, 1);
+    }
+
+    /* font-size is a plain local (canvas-space) value, not compensated by
+       --map-counter-zoom like the zoom control above: word-wrap is decided
+       in that same local space, where #map is always 1280px wide, so a
+       flat local size keeps the same wrap outcome and the same proportion
+       of the map's own width at every real viewport, confirmed with the
+       project's puppeteer container across the full viewport sweep
+       (~68% of the map's own width, no wrap, at 460px through 1920px).
+       height/line-height: auto/normal, overriding MapLibre's own fixed
+       20px/20px default, which did not grow if the text ever did wrap,
+       spilling the second line past #map-slide's own overflow:hidden. */
+    .maplibregl-ctrl-attrib {
+      font-size: 20px;
+      height: auto;
+      line-height: normal;
+      /* MapLibre's own default is text-align: right, tuned for its default
+         bottom-right position; this control is moved to bottom-left. */
+      text-align: left;
+    }
+
+    /* Semi-transparent square label shown as the map marker icon. */
+    .fort-letter-box {
+      width: 33px;
+      height: 33px;
+      background: var(--green-dark-40);
+      border: 1px solid var(--black-30);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 12px;
+      color: var(--white);
+      cursor: pointer;
+    }
+
+    .fort-letter-box:hover {
+      background: var(--green-dark-85);
+    }
+
+    /* Overlaid on the image's own top-right corner, rather than left below
+       it as before: that freed the vertical space .fort-meta below the
+       image now uses (see appendFortSlide()'s own comment on why .fort-meta
+       lives there). A background box is required at this corner placement,
+       unlike the previous below-image placement, since a light patch of the
+       photo underneath would otherwise make light text unreadable at
+       whatever point in the image it happens to land.
+       Selector is .reveal .image-credit, not just .image-credit, so this
+       rule outranks the earlier .reveal p, .reveal li rule instead of
+       losing to it (see .reveal .fort-meta below for the same fix). */
+    .reveal .image-credit {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      margin: 0;
+      padding: 2px 8px;
+      background-color: var(--black-55);
+      border-radius: 4px;
+      font-size: 16pt;
+      color: var(--white);
+    }
+
+    .image-credit a {
+      color: var(--white);
+    }
+
+    /* Wraps only the <img> (plus .image-credit and .fort-video-badge, both
+       position: absolute against this element), separately from the
+       Adres/Zwiedzanie/Kontakt lines that follow as .fort-image's own next
+       sibling: position: relative here means both those absolutely
+       positioned corner badges anchor to the photo's own edges specifically.
+       An earlier version set position: relative on .fort-image itself,
+       which wraps the photo and the meta lines together; that placed
+       .fort-video-badge's own bottom: 8px against the bottom of that whole
+       taller box instead, so the badge overlapped the Adres line below the
+       photo rather than sitting inside the photo's own corner.
+       .image-credit's own top-right position happened to still look correct
+       under that same bug, purely because the <img> is .fort-image's first
+       child, so their top edges coincide regardless of what follows below;
+       nothing about bottom: 8px has that same coincidence. */
+    .fort-photo {
+      position: relative;
+    }
+
+    /* The fort title (linking to nameUrl) and the Kontakt line's own value
+       (linking to contactUrl, when known) stay the same color as their
+       surrounding text, including once visited, rather than taking on the
+       page's general link color (.reveal a's own var(--khaki)) or a
+       browser's default visited-link color: both would read as an unrelated
+       accent color breaking up the heading/metadata's own single color,
+       when the underlying text is already legible and the underline alone
+       is enough to signal it is clickable. */
+    .fort-text h3 a,
+    .fort-text h3 a:visited,
+    .fort-meta a,
+    .fort-meta a:visited {
+      color: inherit;
+    }
+
+    .fort-text h3 a:hover {
+      color: var(--orange-60);
+    }
+
+    .fort-meta a:hover {
+      color: var(--khaki-dark);
+    }
+
+    /* A specialized fortification term inline within a fort's own
+       description/attraction text (see fortificationData's own comment on
+       glossary markup): a <button>, not a <span> with a click handler, so
+       it is keyboard-operable (Enter/Space) without a separate keydown
+       handler, the same way every other interactive element on this page
+       already is. Colored var(--khaki), the same color .reveal a already
+       uses for every other link on this page (4.94:1 against the page's
+       own dark background, clearing WCAG 2.2 AA's 4.5:1 normal-text
+       minimum), not the page's own accent orange, which is reserved for
+       headings and controls elsewhere. Dotted, not solid, underline still
+       distinguishes it from a plain solid-underlined <a>. The previous
+       var(--khaki-light) (a lighter, greyer tint) was too close to the
+       surrounding white paragraph text to read as clickable, confirmed on
+       both a real screenshot and a real mobile screen. */
+    .glossary-term {
+      display: inline;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-bottom: 2px dotted var(--khaki-lightest);
+      background: none;
+      color: var(--khaki-lightest);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .glossary-term:hover {
+      border-bottom-color: var(--khaki-light);
+      color: var(--khaki-light);
+    }
+
+    /* The term's own explanation text, hidden inline until openGlossaryPopup()
+       copies it into #glossary-content below; never rendered in place. */
+    .glossary-explanation {
+      display: none;
+    }
+
+    .glossary-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .glossary-overlay.open {
+      display: flex;
+    }
+
+    .glossary-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: var(--black-60);
+    }
+
+    /* width is vw-primary, not vh: this presentation is landscape-only
+       (portrait is blocked entirely by #portrait-warning), so a short
+       viewport is always wide too, and a vh-tied width read as a
+       tall/square card instead of a wide banner there. */
+    .glossary-frame {
+      position: relative;
+      width: min(70vw, 500px);
+      margin: 20px;
+      padding: clamp(16px, calc(var(--real-vh, 1vh) * 5), 28px);
+      background-color: var(--brown);
+      border: 1px solid var(--khaki);
+      border-radius: 8px;
+      box-shadow: 0 8px 32px var(--black-40);
+    }
+
+    /* Straddles the frame's own top-right corner (half outside, half
+       inside, via a negative offset of half its own size) rather than
+       sitting fully inside it: fully inside needed matching top padding
+       reserved on .glossary-content so text could never start on the same
+       line as the button, which left an empty-looking gap above the first
+       line on a short popup. Straddling the corner keeps the button clear
+       of the text entirely without reserving any extra padding. clamp(),
+       not a flat size: at the project's own shortest supported viewport
+       (540x320) a flat 28px button read oversized next to the shrunk
+       popup around it. */
+    .glossary-close {
+      position: absolute;
+      top: calc(clamp(20px, calc(var(--real-vh, 1vh) * 6), 28px) / -2);
+      right: calc(clamp(20px, calc(var(--real-vh, 1vh) * 6), 28px) / -2);
+      width: clamp(20px, calc(var(--real-vh, 1vh) * 6), 28px);
+      height: clamp(20px, calc(var(--real-vh, 1vh) * 6), 28px);
+      border-radius: 50%;
+      border: none;
+      background-color: var(--khaki);
+      color: var(--white);
+      font-size: clamp(11px, calc(var(--real-vh, 1vh) * 3), 16px);
+      cursor: pointer;
+    }
+
+    .glossary-close:hover {
+      background-color: var(--khaki-dark);
+    }
+
+    .glossary-content {
+      /* --real-vh, same reason as .glossary-frame above. Floor raised from
+         an earlier 9pt, which read too small at the shortest viewport. */
+      font-size: clamp(11pt, calc(var(--real-vh, 1vh) * 4), 16pt);
+      line-height: 1.5;
+      color: var(--white);
+    }
+
+    .glossary-content a {
+      color: var(--khaki);
+    }
+
+    .glossary-content a:hover {
+      color: var(--khaki-dark);
+    }
+  </style>
+</head>
+<body>
+  <!-- Rotate-hint icon: a modified version of a sandcastle illustration
+       (https://pixabay.com/vectors/sandcastle-sandbox-beach-castle-149932/,
+       Pixabay Content License; also mirrored, unmodified, at
+       https://svgsilh.com/image/149932.html), edited in Inkscape to remove
+       its second tower and trim its wavy base flat. -->
+  <div id="portrait-warning">
+    <h2>Forty<br>Twierdzy<br>Toruń</h2>
+    <svg class="rotate-icon" viewBox="0 0 1280 987" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fortyfikacja">
+      <defs>
+        <!-- Two copies of the same tile, same proportions throughout, only
+             because the two shapes below reference it from different
+             coordinate spaces: rect390 (the flat base, below) is filled in
+             already-scaled final space, but the tower's own path is filled
+             from inside a scale(0.1,-0.1) group, i.e. in raw pre-scale
+             coordinates ten times larger numerically, so the same tile
+             definition would render ten times smaller on screen there.
+             brick-texture (256x128) is scaled 4x from an original 64x32 tile
+             for rect390; at this icon's own small rendered size (~200px
+             wide) the original tile anti-aliased away to a near-flat
+             blended color instead of a visible brick pattern.
+             brick-texture-tower (2560x1280) is brick-texture scaled by
+             another 10x, matching that same coordinate-space difference, so
+             both shapes show the same on-screen brick size. -->
+        <pattern id="brick-texture" width="256" height="128" patternUnits="userSpaceOnUse">
+          <rect width="256" height="128" fill="var(--brick-dark)"/>
+          <rect x="4" y="8" width="120" height="48" fill="var(--brick)"/>
+          <rect x="132" y="8" width="120" height="48" fill="var(--brick)"/>
+          <rect x="68" y="72" width="120" height="48" fill="var(--brick)"/>
+          <rect x="-60" y="72" width="120" height="48" fill="var(--brick)"/>
+          <rect x="196" y="72" width="120" height="48" fill="var(--brick)"/>
+        </pattern>
+        <pattern id="brick-texture-tower" width="2560" height="1280" patternUnits="userSpaceOnUse">
+          <rect width="2560" height="1280" fill="var(--brick-dark)"/>
+          <rect x="40" y="80" width="1200" height="480" fill="var(--brick)"/>
+          <rect x="1320" y="80" width="1200" height="480" fill="var(--brick)"/>
+          <rect x="680" y="720" width="1200" height="480" fill="var(--brick)"/>
+          <rect x="-600" y="720" width="1200" height="480" fill="var(--brick)"/>
+          <rect x="1960" y="720" width="1200" height="480" fill="var(--brick)"/>
+        </pattern>
+        <!-- Clips away anything below y=797.62598: the source silhouette's
+             own original wavy base still dips lower than that in places,
+             and the flat rect below only adds a band on top of it without
+             removing that lower excess, so a real clip is required for a
+             genuinely flat base. -->
+        <clipPath id="fort-icon-flat-base" clipPathUnits="userSpaceOnUse">
+          <rect x="-100" y="0" width="1480" height="797.62598"/>
+        </clipPath>
+      </defs>
+      <g clip-path="url(#fort-icon-flat-base)">
+      <g transform="translate(0,987) scale(0.1,-0.1)" fill="url(#brick-texture-tower)" stroke="none">
+        <path d="m 7519.9951,9870 v -165 -165 h -219.9902 -221.001 l 3.0029,161.001 2.9883,161.997 -144.9902,-5.9912 c -79.9977,-4 -178.002,-10.0078 -217.002,-13.0078 l -73.0078,-7.0019 v -147.9932 -148.0078 l -31.9922,-4.9951 c -93.9977,-14 -317.0049,-48.9981 -340.0049,-52.9981 l -27.9931,-5.0097 v 151.0107 c 0,82.9977 -3.002,150.9961 -7.002,150.9961 -17,0 -207.012,-51.0049 -260.0097,-70.0049 -32,-11 -59,-19.9951 -60,-19.9951 -2,0 -2.9883,-54.0023 -2.9883,-120 0,-132.9977 0.998,-132.0049 -67.002,-100.0049 l -43.0078,18.999 V 9555 c 0,74.9977 -9.9922,80.0026 -46.9922,25.0049 l -22.998,-33.0029 v -684.0088 c 0,-653.9862 0.999,-685.9935 18.999,-710.9912 4.8061,-7.2093 29.3834,-55.4363 45.6592,-86.0303 0.5966,-0.1803 1.2211,-0.2539 1.8164,-0.4395 45.0306,-14.0368 105.5261,-56.8949 133.6084,-95.7568 12.0258,-16.6421 21.8156,-34.7977 32.7246,-52.1924 5.8856,-23.0669 16.5765,-45.4183 17.666,-69.1992 0.3217,-7.021 -1.9345,-11.844 -2.124,-18.3545 6.3564,-10.288 11.6111,-23.149 15.1025,-38.7598 3.8145,-17.0554 8.306,-33.9626 11.2647,-51.1963 6.4626,-30.0257 15.1469,-59.4855 21.9287,-89.4287 2.7256,-12.0339 3.8055,-23.0408 3.5596,-32.959 3.1,-14.3518 11.0848,-27.4026 12.5097,-42.0996 -0.027,-41.5563 -0.074,-83.1166 -0.1758,-124.6728 -0.1577,-59.3487 -0.3437,-118.7062 -1.0107,-178.0518 -0.8313,-63.5149 -1.9355,-127.0504 -5.4199,-190.4883 -3.1725,-52.9328 -7.9751,-105.7102 -18.9844,-157.6904 -7.6094,-42.8708 -7.6745,-86.5625 -10.9424,-129.9023 -2.2283,-50.6926 -0.4437,-101.4684 -1.0107,-152.1973 -1e-4,-54.2931 7e-4,-108.5975 0,-162.8906 -9e-4,-51.5822 -0.011,-103.1661 -0.015,-154.7461 -0.01,-51.111 -0.014,-102.2165 -0.044,-153.3252 -0.034,-53.4615 -0.068,-106.9266 -0.2197,-160.3857 -0.157,-49.7875 -0.3745,-99.5728 -0.9375,-149.3555 -0.547,-47.7988 -1.5279,-95.6102 -0.6299,-143.4082 -1.9406,-49.6035 -4.0657,-99.5662 -15.3223,-148.1104 -17.7618,-61.9703 -47.9983,-114.7282 -111.9726,-138.0468 -73.1638,-17.6905 -148.5239,-16.0599 -223.3594,-19.2627 -65.7417,-3.7682 -131.193,-10.9346 -196.626,-18.1641 -36.6188,-6.2414 -73.5916,-10.5602 -110.6396,-13.8428 -14.6612,-1.0802 -29.3603,-1.4382 -44.0332,-2.2412 -83.0699,-12.1533 -165.9941,-26.4771 -249.9463,-28.7109 -90.821,-3.0998 -181.632,-5.5857 -272.5196,-4.2627 -69.8655,0.025 -139.7369,0.054 -209.6045,0.2344 -66.6771,0.2174 -133.3501,0.5082 -200.0244,1.4062 -73.9368,1.1881 -147.9103,2.7591 -221.7187,7.5147 -2.5999,0.2083 -5.1269,0.9171 -7.7197,1.1718 -20.5237,0.9776 -28.2642,1.3422 -87.3047,4.1748 -91.4429,4.2824 -182.8033,6.5979 -274.3653,5.7569 -6.8678,0.08 -14.0099,-0.048 -21.2109,-0.1905 l -63.9697,-4.8925 c -86.9977,-7 -165.9903,-15.0069 -174.9903,-17.0069 -1.8607,-0.5473 -0.4804,15.5629 -1.9775,15.542 -18.6336,-18.9421 -42.2813,-20.8986 -72.1436,-18.1787 -38.6948,3.1075 -77.4568,8.1794 -114.5068,20.2734 -51.458,20.1776 -103.776,50.562 -110.6104,111.6211 -2.8437,22.9716 -3.8453,46.3015 -11.9677,68.2471 -8.5781,25.653 -20.374,50.7932 -21.7237,78.1934 1.7952,3.3758 3.3895,6.8988 4.9219,10.4736 V 6434.0039 7260 l 76.0108,153.0029 c 41.9977,82.9977 84.9951,164.0062 94.9951,179.0039 18,25 18.999,57.007 18.999,702.9932 0,763.9816 5.9997,709.9974 -82.998,769.9951 l -52.002,35.0098 -3.0029,-112.002 c -1,-60.9977 -6.9932,-116.999 -12.9932,-123.999 -13,-16 -143.0088,-69.999 -189.0088,-78.999 L 3015,8778.999 l 3.0029,199.9951 3.003,200.0098 -38.0127,9.9902 c -100.9977,25 -307.9981,61.0108 -352.9981,61.0108 -19,0 -19.9951,-6.0056 -19.9951,-176.001 v -176.001 l -22.002,5.9912 c -31.9977,9 -250.9951,44.0059 -319.9951,51.0059 l -58.0078,6.0059 v 165 c 0,162.9954 -2e-4,164 -22.0019,165 -13,1 -107.0023,3.998 -210,7.998 l -187.9981,5.9912 -1.9922,-165 -3.0029,-165 -217.998,-2.9883 L 1350,8970 v 165 c 0,150.9954 -1.0029,165 -18.0029,165 -39,0 -339.99997,-20.001 -378.99905,-26.001 l -42.99317,-4.9951 v -148.0078 -147.9932 l -62.00683,-7.0019 c -34.99931,-4 -117.00454,-15.9971 -183.00293,-26.9971 -65.99862,-11 -127.00023,-21.0019 -135,-22.0019 C 516.99535,8915.002 514,8939.0082 510,9066.0059 l -4.99512,150.9961 -111.00586,-28.0079 C 333.0004,9172.9964 260.99345,9152.998 233.99414,9142.998 l -48.99902,-18.999 -2.98828,-116.997 c -3,-130.9977 -5.00845,-134.0049 -77.00684,-100.0049 l -34.995117,17.0068 v 68.9941 70.0049 l -21.00586,-18.999 C -0.99981764,8999.0062 0,9017.9787 0,8291.9971 c 0,-648.9862 0.99944712,-679.9932 18.999023,-702.9932 9.99977,-13 52.996106,-93.0033 94.995117,-176.001 L 190.00488,7260 V 4879.9951 c 0,-2121.9517 2.00046,-2384.001 15,-2411.001 73.99839,-141.9954 545.00509,-247.0032 1198.98922,-266.0009 l 218.0127,-5.9912 501.9873,-302.0069 c 16.78,-10.1289 49.7121,-29.9641 68.1006,-41.0596 247.1564,-0.1134 494.3176,-0.3604 741.4746,-0.4101 497.2442,-0.092 994.4942,-0.1118 1491.7383,-0.1318 368.2769,-0.015 736.5662,-0.012 1104.8438,-0.015 366.046,0 732.1025,3e-4 1098.1494,0 362.8062,-2e-4 725.6166,10e-5 1088.4228,0 h 800.2002 941.0596 1267.3686 219.99 c 85.368,5.8348 170.723,11.9058 256.157,16.7432 159.688,10.3537 319.661,4.6936 479.37,-1.5528 105.3,-8.7377 210.482,-0.6449 315.557,6.1817 107.128,6.5055 214.306,12.123 321.65,11.792 76.181,-0.9503 152.224,-2.9904 228.223,-7.002 0.38,0.276 0.724,0.5626 1.113,0.835 15.472,8.4597 32.693,10.8823 49.966,12.3486 5.266,213.4874 12.627,33.5088 12.627,1680.2783 v 2628.003 l 71.001,156.9873 c 39,85.9977 81.995,176.0159 94.995,199.0136 l 23.994,41.9971 v 747.9932 c 0,843.9793 6.005,779.0042 -79.995,847.0019 -25,20 -48.002,36.0059 -52.002,36.0059 -5,0 -7.998,-56.0013 -7.998,-123.999 0,-120.9977 -1.005,-125.0088 -25.005,-144.0088 -26,-20 -127.997,-63.9961 -176.997,-75.9961 l -27.993,-6.0059 V 8100 8320.0049 l -24.009,9.9902 c -33,12 -259.993,58.0059 -327.993,66.0059 l -58.008,7.0019 v -195.9961 -195 L 11969.004,8025 c -48,13 -193.011,36.9951 -301.011,49.9951 l -47.988,6.0059 v 179.0039 c 0,140.9954 -3.004,178.9883 -14.004,182.9883 -7,3 -102.004,9.0078 -209.004,13.0078 l -196.992,7.0019 -2.007,-183.999 -3.003,-183.999 -217.002,-3.0029 -217.998,-2.0069 v 180 180 h -56.997 c -67,0 -328,-18.001 -360,-26.001 -23,-4 -22.998,-5.9967 -22.998,-166.9921 v -163.0079 l -90.996,-11.997 c -49,-7 -135.005,-20.9922 -190.005,-31.9922 -54.9977,-11 -102,-20.0098 -105,-20.0098 -2,0 -3.999,74.0023 -3.999,165 0,124.9977 -2.9971,165 -11.9971,165 -23.9977,0 -203.0049,-51.9922 -265.0049,-76.9922 l -63.0029,-25.0049 v -128.9941 c 0,-144.9954 -1.001,-147.0068 -71.001,-107.0068 l -37.998,21.0058 -3.0029,75.9961 -2.9883,75.9961 -30,-38.9941 -30,-38.9942 -3.0029,-754.0136 -2.0069,-752.9883 24.0088,-47.0069 c 14,-26.9977 56.9935,-117.0042 95.9912,-202.0019 L 9600,6206.9971 v -339.9903 -228.1787 c 0.8249,-11.3912 1.2325,-22.8245 1.6113,-34.2334 1.0015,-36.7359 1.2526,-73.4968 1.4356,-110.2441 0.148,-41.4099 0.1897,-82.8246 0.2197,-124.2334 0.02,-23.9176 0.024,-47.8304 0.029,-71.7481 0,-17.877 -10.1616,-21.7739 -15,-33.9404 36.0281,-34.2845 11.237,-93.4732 -70.4297,-89.6338 -3.9049,0.184 -7.8139,0.358 -11.7187,0.542 -21.8391,1.3148 -43.6595,2.8855 -65.5518,2.9443 -29.7905,0.9992 -59.6188,2.3072 -89.1943,6.211 -32.7038,4.657 -64.6547,12.175 -96.2403,21.8848 -35.3794,9.0953 -71.7661,13.1324 -107.3291,21.4892 -21.1054,-13.5365 -55.7873,-10.8474 -91.4941,21.9873 -15.4654,14.2214 -30.6845,28.6954 -43.7695,45.2197 -24.3728,30.5788 -48.546,61.3182 -72.8321,91.9629 -4.7085,5.9417 1.7598,8.0008 0.029,12.8467 -5.4524,2.0986 -9.9053,5.0158 -6.4013,6.3574 2.0924,0.8017 4.2501,1.2555 6.4306,1.5821 -0.5726,7.0779 -2.5328,14.8254 0.044,20.8886 -22.468,8.5924 -39.4134,17.1915 -12.6416,20.7715 2.5993,0.3476 5.2195,0.591 7.8369,0.8496 0.624,2.4646 1.1859,4.8349 1.6846,7.0606 -1.053,0.9688 -0.9698,3.8011 -1.9776,4.8779 -0.5532,-0.9709 -1.1011,-1.9496 -1.831,-3.3838 -0.3027,3.2775 -0.5009,6.5639 -0.7764,9.8438 -10.7531,13.9443 -22.4336,27.6433 -22.544,55.7812 l -0.088,22.9395 c -0.208,48.0028 -0.5205,96.0052 -0.7325,144.0088 0.01,3.4216 0.713,6.8012 0.7325,10.2246 -2.743,26.1736 -4.8257,52.4018 -5.3028,78.7353 -1.0099,49.5568 -0.6265,99.5942 9.5069,148.3301 2.2821,5.3715 8.569,9.2684 11.9677,15.4248 1.5616,18.9201 7.2711,37.2792 14.3262,55.1074 V 6615.9961 7830 l 75.9961,153.0029 c 42,82.9977 85.0098,163.001 95.0098,176.001 17.9977,23 18.999,54.0148 18.999,701.001 v 676.9922 l -22.9981,33.999 c -22.9977,34 -92.0088,88.0039 -114.0088,89.0039 -9.9977,0 -12.9931,-29.0072 -12.9931,-115.0049 0,-112.9977 -0.012,-114.9971 -27.0117,-131.9971 -32,-20.9977 -185,-72.9912 -195,-65.9912 -5,2 -7.9981,94.0004 -7.9981,202.9981 v 197.9883 l -67.998,16.0107 c -37,8 -112.9945,21.9961 -166.9922,30.9961 -55,8 -115.014,16.9951 -132.0117,19.9951 l -32.9883,6.0059 v -179.0039 -179.0039 l -82.002,18.0029 c -45.9977,10 -136.012,24.0107 -200.0097,31.0107 L 7950,9524.0039 v 166.9922 166.0107 l -152.0068,5.9912 c -83,4 -179.9952,7.002 -214.9952,7.002 z M 3797.959,5911.8311 c -0.2149,-0.3201 -0.5221,-0.493 -0.7324,-0.8204 -1.3609,-2.5379 -12.274,-18.9341 -9.9903,-25.5029 0.6687,-1.9234 2.3651,3.3258 3.4424,5.0537 1.1999,1.9246 1.8405,4.2268 3.3838,5.8887 0.9618,1.0356 3.1092,0.6406 3.8232,1.8603 1.4246,2.4332 1.3861,5.4704 2.0801,8.2032 -0.6362,1.784 -1.3642,3.5356 -2.0068,5.3174 z m 640.0928,-171.5186 c -8.1365,-1.5413 -16.2883,-3.0055 -24.4043,-4.6436 10.941,2e-4 21.8841,-2e-4 32.8271,0 -2.8328,1.5396 -5.6607,3.0785 -8.4228,4.6436 z m 1439.8974,-123.5303 c -13.9369,-23.3958 -30.9509,-45.0614 -50.5371,-64.834 8.937,1.6019 18.447,-0.4341 27.2168,2.1094 13.3811,12.3179 17.8428,32.4356 22.1191,49.5264 0.8783,4.3409 0.4729,8.8362 1.2012,13.1982 z m -2617.4707,-40.1074 c -3.9125,-2.3309 -8.0768,-4.9622 -12.832,-8.3643 -6.3482,-4.5401 8.1776,-3.0378 20.3174,0.7178 -1.7063,1.5548 -3.406,3.1012 -5.1123,4.7461 -0.861,0.9257 -1.5952,1.9265 -2.3731,2.9004 z m 78.7207,-74.0918 c 0.6015,-5.0937 1.2018,-10.1941 1.8457,-15.2783 0.7679,-4.5673 -0.1853,-9.7881 2.2998,-13.6963 1.7429,-2.7411 -1.517,6.9962 0.2198,9.7412 0.7053,1.1146 4.0665,-2.0385 13.5937,-6.8262 0.3102,-0.1559 0.4536,-0.2195 0.7471,-0.3662 -6.4682,8.6418 -12.6951,17.4582 -18.7061,26.4258 z m 5599.292,-49.585 c -1.1042,-0.7125 -1.7484,-1.5051 -2.1387,-2.5195 1.0154,0.097 2.0305,0.201 3.0469,0.293 -0.5054,0.3757 -0.4105,1.8283 -0.9082,2.2265 z"/>
+      </g>
+      <path d="m 20.279297,740.94727 v 56.67871 H 1261.106 v -56.67871 z" fill="url(#brick-texture)"/>
+      </g>
+    </svg>
+    <p>Obróć poziomo</p>
+  </div>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Slide 1: Interactive Map -->
+      <section id="map-slide">
+        <h2>{{Forty|fort}} Twierdzy Toruń</h2>
+        <div id="map"></div>
+        <div class="map-footer"></div>
+      </section>
+
+      <!-- Fort slides (Slide 2 onward) are appended here at runtime by
+           appendFortSlide(), one per fortificationData entry with
+           visible === true, before Reveal.initialize() runs. -->
+
+    </div>
+  </div>
+
+  <!-- Glossary popup for specialized fortification terms (see
+       fortificationData's own comment on glossary markup, and
+       openGlossaryPopup()/closeGlossaryPopup() below). A sibling of .reveal,
+       not nested inside it, so it renders at real screen size rather than
+       inside reveal.js's own scaled canvas, the same reasoning already
+       documented for .controls's own fixed positioning above. -->
+  <div class="glossary-overlay" id="glossary-overlay">
+    <div class="glossary-backdrop" id="glossary-backdrop"></div>
+    <div class="glossary-frame">
+      <button class="glossary-close" id="glossary-close" aria-label="Zamknij">&#10005;</button>
+      <div class="glossary-content" id="glossary-content"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/reveal.js"></script>
+
+  <!-- MapLibre GL JS 6.x ships as an ES module only (no UMD/global bundle), so
+       it is loaded via a bare specifier import in its own <script type="module">
+       below rather than a plain <script src>. integrity: sha384 of the exact
+       pinned .mjs file, cross-checked against the npm registry's own tarball;
+       recalculate if the version above ever changes. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "maplibre-gl": "https://unpkg.com/maplibre-gl@6.1.0/dist/maplibre-gl.mjs"
+    },
+    "integrity": {
+      "https://unpkg.com/maplibre-gl@6.1.0/dist/maplibre-gl.mjs": "sha384-B+i5EH9X6DFG74Gd1GkROEzOm3aLc7V8zms51GRKlG8Ps7pLTH7atCPGvDmAYntA"
+    }
+  }
+  </script>
+  <!-- A module script is always deferred, so this never blocks Reveal.initialize()
+       below: it used to be a plain blocking <script src>, which downloading (needed
+       only later, once the map slide is actually shown) held up Reveal.initialize()
+       long enough that every slide rendered fully opaque and stacked on top of each
+       other, since nothing else hides a slide until Reveal.initialize() assigns it a
+       present/past/future class. Kept in its own module script, separate from the
+       plain script below that calls Reveal.initialize(), so that script's own
+       execution never has to wait on this import resolving either. -->
+  <script type="module">
+    import * as maplibregl from 'maplibre-gl';
+    window.maplibregl = maplibregl;
+    window.dispatchEvent(new Event('maplibregl-ready'));
+  </script>
+  <script>
+    // Force the html element height to exactly the current visible
+    // viewport height before Reveal.initialize() reads it for scale calculation.
+    // dvh CSS is ignored on older mobile browsers; this JS approach works universally.
+    // --real-vh (1% of it) fixes the same issue for plain vh units elsewhere
+    // (see .glossary-frame), which stay tied to the browser's large viewport.
+    function syncViewportHeight() {
+      document.documentElement.style.height = window.innerHeight + 'px';
+      document.documentElement.style.setProperty('--real-vh', (window.innerHeight / 100) + 'px');
+    }
+    syncViewportHeight();
+    window.addEventListener('resize', syncViewportHeight);
+
+    // Swallow single-finger scroll gestures so the page never scrolls and the
+    // mobile URL bar neither hides nor shows on finger movements. The listener
+    // is registered on every platform and stays inert on desktop, where touch
+    // events never fire, so no per-platform code paths exist. Two-finger pinch
+    // zoom and panning while zoomed in remain available, which WCAG 2.2
+    // success criterion 1.4.4 requires. The passive:false option is required
+    // because browsers otherwise ignore preventDefault() in touchmove listeners.
+    //
+    // Gestures inside the MapLibre map are intentionally NOT exempted. MapLibre
+    // GL JS registers its own touchmove listener directly on the map container,
+    // which is closer to the touch target than document and so runs first during
+    // the bubble phase; calling preventDefault() here afterwards only stops the
+    // browser from also treating the drag as a page scroll, it does not undo
+    // MapLibre's already-completed pan update.
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) return;
+      if (window.visualViewport && window.visualViewport.scale > 1) return;
+      event.preventDefault();
+    }, { passive: false });
+
+    // Single source of truth for every fort of the outer ring (I-XV): the map markers
+    // and fort slides below are both generated from this array (see appendFortSlide()
+    // and the `locations` array inside initializeMap()), rather than from any separate
+    // hardcoded list. coords and image are sourced from each fort's own
+    // pl.wikipedia.org article; image is an infobox thumbnail already generated by
+    // Wikipedia at 250px width, not resized locally, so it stays small on mobile
+    // (MediaWiki generates that thumbnail server-side on request, this only reuses the
+    // resulting URL).
+    // A field is `null`, rather than an empty string, wherever the source text does not
+    // state it, so "unknown" stays distinguishable from "confirmed empty". The two boolean
+    // fields, `visitable` and `visible`, are the exception: both are always `true`/`false`,
+    // `false` wherever the source text does not explicitly say otherwise, so callers never
+    // need to handle a third state for either.
+    // coords is [longitude, latitude], the order MapLibre GL JS and GeoJSON both expect
+    // (the reverse of the everyday latitude/longitude order), matching the existing
+    // `locations` array below.
+    // A specialized fortification term (e.g. kaponiera) within description/attraction
+    // is marked up inline as {{displayText|key}}, e.g. {{kaponier|kaponiera}}:
+    // displayText is the exact inflected word to show (Polish noun declension
+    // means the same term appears as kaponiera/kaponiery/kaponier/kaponierą/etc.
+    // depending on the sentence, so this cannot be derived automatically from
+    // key alone), and key looks up the definition and Wikipedia link in
+    // glossaryData below. expandGlossaryMarkers() turns this into the actual
+    // <button class="glossary-term">...</button> markup at render time.
+    const glossaryData = {
+      fort: {
+        definition: 'Fort (rozproszony) – samodzielna budowla obronna, bez stałego połączenia z innymi obiektami za pomocą ciągłych murów lub wałów.',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Fort'
+      },
+      fortposredni: {
+        definition: 'Fort (pośredni) – fort budowany pomiędzy fortami artyleryjskimi i dedykowany piechocie.',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Dzie%C5%82o_po%C5%9Brednie'
+      },
+      kaponiera: {
+        definition: 'Kaponiera – przykryta budowla fortyfikacyjna używana do ostrzału skrzydłowego lub skośnego, broniąca fosy.',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Kaponiera'
+      },
+      poterna: {
+        definition: 'Poterna (potajnik) – podziemne przejście łączące stanowiska wewnątrz fortu bez narażenia na ostrzał.',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Poterna'
+      },
+      przedstok: {
+        definition: 'Przedstok (glacis) – sztuczny stok będący częścią systemu obronnego fortecy, utrudniający podejście do fosy.',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Przedstok'
+      },
+      redita: {
+        definition: 'Redita – półkolista, kolista lub wielokątna budowla w centrum fortu, tworząca ośrodek obrony (śródszaniec).',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Redita'
+      },
+      tradytor: {
+        definition: 'Tradytor – stały element fortyfikacji przeznaczony do prowadzenia ognia bocznego.',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Tradytor'
+      },
+      transzeja: {
+        definition: 'Transzeja – wąski, głęboki rów służący do przemieszczania się żołnierzy osłoniętych przed ostrzałem.',
+        wikipediaUrl: 'https://pl.wikipedia.org/wiki/Transzeja'
+      }
+    };
+
+    const fortificationData = [
+      {
+        number: 'I',
+        name: 'Fort I (Jan III Sobieski)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_I_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1888-1894, to jedyny na wschodniej granicy Prus fort pancerny. Był także jedynym fortem Twierdzy Toruń, który brał czynny udział w walkach podczas I wojny światowej.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Winna 19',
+        coords: [18.66792, 53.01892],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Torun_Fort_I_01.JPG/250px-Torun_Fort_I_01.JPG',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Torun_Fort_I_01.JPG',
+        video: 'https://www.youtube.com/watch?v=-ADANvdwuE4',
+        visible: true
+      },
+      {
+        number: 'II',
+        name: 'Fort II (Stefan Czarniecki)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_II_Twierdzy_Toru%C5%84',
+        description: 'Pierwszy pruski fort w Toruniu, zbudowany w latach 1878-1882. Posiadał magazyn prochowy zlokalizowany w lewej części. Przechowywany tam czarny proch, łatwo gromadził wilgoć, tracąc właściwości bojowe, oraz wymagał izolacji od źródeł ognia, nawet takich jak tarcie żelaznych podkuć pruskich butów wojskowych o posadzkę. Fort w 1921 roku służył internowanym żołnierzom rosyjskiej białogwardyjskiej armii, a potem rodzinom polskich reemigrantów. W latach 50. służył celom przetwórstwa owocowo-warzywnego.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Leszczynowa 55',
+        coords: [18.65521, 53.02441],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Toru%C5%84_fort_II_widok_og%C3%B3lny.JPG/250px-Toru%C5%84_fort_II_widok_og%C3%B3lny.JPG',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Toru%C5%84_fort_II_widok_og%C3%B3lny.JPG',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'III',
+        name: 'Fort III (Stanisław Jabłonowski)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_III_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1888-1890 jako {{fort pośredni|fortposredni}}, był większy od typowego fortu piechoty, posiadał własną kuchnię, latryny oraz studnię. Wskazuje to, że miał samodzielną funkcję obronną, w celu osłony linii kolejowej przebiegającej w pobliżu. Można go uznać za zapowiedź późniejszych umocnionych punktów oporu piechoty.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Curie Skłodowskiej 51',
+        coords: [18.64635, 53.03349],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Twierdza_Torun_Fort_III_2011.jpg/250px-Twierdza_Torun_Fort_III_2011.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Twierdza_Torun_Fort_III_2011.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'IV',
+        name: 'Fort IV (Stanisław Żółkiewski)',
+        nameUrl: 'https://fort.torun.pl/',
+        description: 'Pomimo budowy w latach 1879-1884, podobnie jak dwóch pierwszych toruńskich pruskich fortów (Fortu II oraz Fortu XI), jest od nich nowocześniejszej konstrukcji, z dodatkowymi wzmocnieniami wału oraz stropów. Nie odegrał on jednak znaczącej roli w historii Twierdzy Toruń. Fort ten, będąc w rękach prywatnych, jest dziś najlepiej przystosowanym turystycznie fortem toruńskim, z infrastrukturą hotelową oraz gastronomiczną.',
+        attraction: '',
+        contact: '+48 56 655 82 36<br>biuro@fort.torun.pl',
+        contactUrl: 'https://fort.torun.pl/kontakt/',
+        visitable: true,
+        address: 'Chrobrego 86',
+        coords: [18.63276, 53.04105],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/FortTorun6_DSC0020.JPG/250px-FortTorun6_DSC0020.JPG',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:FortTorun6_DSC0020.JPG',
+        video: 'https://www.youtube.com/watch?v=-W5WwvCcEDQ',
+        visible: true
+      },
+      {
+        number: 'V',
+        name: 'Fort V (Karol Chodkiewicz)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_V_Twierdzy_Toru%C5%84',
+        description: 'Wzniesiony w latach 1879-1884, jako jedyny w Toruniu został wzmocniony poprzez pokrycie części stropów blachą falistą, aby ograniczyć szkody wywołane odpadającymi fragmentami cegieł podczas ostrzału. Fort długo pozostał w rękach wojska i służył celom magazynowym. Nie przeprowadzano tu większych przebudów. Wiele elementów fortu zachowało się do dziś, włącznie z płytą pancerną osłaniającą okno oraz oryginalną stolarką drzwiową i okienną.',
+        attraction: '',
+        contact: 'Właściciel prywatny',
+        contactUrl: null,
+        visitable: true,
+        address: 'Polna 11',
+        coords: [18.60475, 53.04302],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Wej%C5%9Bcie_g%C5%82%C3%B3wne_Fort_V.jpg/250px-Wej%C5%9Bcie_g%C5%82%C3%B3wne_Fort_V.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Wej%C5%9Bcie_g%C5%82%C3%B3wne_Fort_V.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'VI',
+        name: 'Fort VI (Jarema Wiśniowiecki)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_VI_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1889-1892 jako {{fort pośredni|fortposredni}}, posiada niesymetryczną konstrukcję, przystosowaną do składowania urobku podczas wykonywania chodników przeciwminowych. Po demilitaryzacji pod koniec lat 50. XX wieku rozebrano mury przeciwskarpowe oraz zniszczono kaponiery. Fort początkowo wykorzystywano jako magazyn płodów rolnych, a następnie jako schron obrony cywilnej. Obecnie jest siedzibą Kurkowego Bractwa Strzeleckiego w Toruniu.',
+        attraction: '',
+        contact: 'Uzgodnienie z dzierżawcą fortu.',
+        contactUrl: null,
+        visitable: true,
+        address: 'Szosa Chełmińska 204-210',
+        coords: [18.58616, 53.03906],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Torun_Fort_VI_01.JPG/250px-Torun_Fort_VI_01.JPG',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Torun_Fort_VI_01.JPG',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'VII',
+        name: 'Fort VII (Tadeusz Kościuszko)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_VII_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1879-1884, przeszedł mało modyfikacji. {{Kaponiera|kaponiera}} czołowa pozostała w pierwotnej formie. Po zajęciu Torunia przez Niemców w 1939 roku obiekt przejęło Gestapo i zaadaptowało na areszt. Gestapo dokonywało rozstrzeliwań w lesie Barbarka oraz zesłań do obozu koncentracyjnego Stutthof. Charakterystyczna podziurawiona ściana fortu nie była miejscem egzekucji, ale pozostałością po funkcjonującej tu później strzelnicy wojskowej.',
+        attraction: '',
+        contact: 'Zwiedzanie podczas Święta Twierdzy Toruń',
+        contactUrl: null,
+        visitable: true,
+        address: 'Polna 1',
+        coords: [18.56436, 53.03496],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Fort_VII_Toru%C5%84.JPG/250px-Fort_VII_Toru%C5%84.JPG',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Fort_VII_Toru%C5%84.JPG',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'VIII',
+        name: 'Fort VIII (Kazimierz Wielki)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_VIII_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1889-1893 jako {{fort pośredni|fortposredni}}. W okresie międzywojennym w forcie mieściły się koszary, a od 1925 roku obiekt przekazano 4. Pułkowi Lotniczemu, ze względu na bliskość toruńskiego lotniska. W latach 1939/1940, podobnie jak Fort VII, pełnił funkcję aresztu Gestapo. Pod koniec lat 80., dzięki inicjatywie jednego z ocalałych więźniów uporządkowano teren, a w dawnych celach urządzono miejsce pamięci narodowej, jednak na początki XXI wieku fort uległ ponownej dewastacji.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: true,
+        address: 'Bielańska 65',
+        coords: [18.55670, 53.02347],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Fort_VIII_w_Toruniu.jpg/250px-Fort_VIII_w_Toruniu.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Fort_VIII_w_Toruniu.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'IX',
+        name: 'Fort IX (Bolesław Chrobry)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_IX_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1882-1884, jako {{fort pośredni|fortposredni}}, ale jednocześnie jako mniejszy fort artyleryjski oraz piechoty, od początku był dwuwałowy. Jego rozmiar wynikał z usytuowania na mniej zagrożonym kierunku od strony Bydgoszczy. Jest bardzo dobrze zachowany i obecnie znajduje się w nim Dom Pomocy Społecznej.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Szosa Okrężna 4',
+        coords: [18.55847, 53.01569],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Twierdza_Torun_Fort_IX_2011.jpg/250px-Twierdza_Torun_Fort_IX_2011.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Twierdza_Torun_Fort_IX_2011.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'X',
+        name: 'Fort X (Bateria Nadbrzeżna)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_X_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1889-1892, bezpośrednio przy wale przeciwpowodziowym, skąd mógł kontrolować zarówno przeprawę przez rzekę, jak i szlak komunikacyjny. Wewnątrz znajdowały się także pomieszczenia niezbędne do codziennego funkcjonowania załogi – kuchnia, studnia oraz latryna.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Przy Grobli 39-39a',
+        coords: [18.56811, 52.99775],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Fort_X_Toru%C5%84.jpg/250px-Fort_X_Toru%C5%84.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Fort_X_Toru%C5%84.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'XI',
+        name: 'Fort XI (Stefan Batory)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_XI_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1879-1884, jest asymetryczny ze względu na warunki terenowe. Tak jak Fort II, posiadał magazyn prochowy zlokalizowany w lewej części. W 1939 roku jako pierwszy w Toruniu fort został zaadaptowany przez Niemców na obóz jeniecki Stalag XXA. Na ścianach {{kaponiery|kaponiera}} czołowej znajdują się wykonane odręcznie napisy i rysunki pozostawione przez alianckich jeńców.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Poznańska 152',
+        coords: [18.57314, 52.98539],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Twierdza_Torun_Fort_XI_2011.jpg/250px-Twierdza_Torun_Fort_XI_2011.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Twierdza_Torun_Fort_XI_2011.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'XII',
+        name: 'Fort XII (Władysław Jagiełło)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_XII_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1889-1893 jako {{fort pośredni|fortposredni}}, bazuje na tym samym projekcie co Fort VI, ale posiada konstrukcję symetryczną. W okresie międzywojennym wchodził w skład Obozu Internowanych nr 15, a podczas II wojny światowej obozu jenieckiego Stalag XXA. W forcie zachowały się rysunki i napisy jeńców brytyjskich, radzieckich oraz powojennych żołnierzy polskich. W roku 1911 miały miejsce ćwiczenia armii niemieckiej z udziałem samolotów, sterowców i balonów.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Okólna / Inowrocławska',
+        coords: [18.59389, 52.98513],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Torun_Fort_XII_02.jpg/250px-Torun_Fort_XII_02.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Torun_Fort_XII_02.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'XIII',
+        name: 'Fort XIII (Karol Kniaziewicz)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_XIII_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1882-1885 w celu ochrony najbardziej zagrożonego, południowego kierunku. Rozwój artylerii i konstrukcji pocisków sprawiły jednak, że szybko stracił swoją wartość bojową. W okresie II wojny światowej był siedzibą sztabu Armii "Pomorze", a następnie częścią obozu Stalag XXA. Dziś jest jedynym fortem, który znajduje się na terenie wojskowym, dzięki czemu w dobrym stanie zachowały się elementy takie jak windy amunicyjne baterii dołączonych.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Okólna 32-40',
+        coords: [18.61565, 52.98281],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Toru%C5%84_Fort_XIII.jpg/250px-Toru%C5%84_Fort_XIII.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Toru%C5%84_Fort_XIII.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'XIV',
+        name: 'Fort XIV (Józef Bem)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_XIV_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1889-1893 jako {{fort pośredni|fortposredni}}, jest otoczony szeroką, mokrą fosą. Woda w fosie nie była częścią projektu i wynika wysokiego poziomu wód gruntowych. W okresie międzywojennym fort, podobnie jak kilka innych obiektów Twierdzy Toruń, wchodził w skład Obozu Internowanych nr 15. W czasie II wojny światowej był częścią obozu jenieckiego, jako szpital. Po wojnie wykorzystywano go jako magazyn amunicji. Jest w rękach prywatnych, bardzo dobrze zachowany.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Włocławska 32/36',
+        coords: [18.63813, 52.99030],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Toru%C5%84_fort_XIV.JPG/250px-Toru%C5%84_fort_XIV.JPG',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Toru%C5%84_fort_XIV.JPG',
+        video: 'https://www.youtube.com/watch?v=IBzjA8rOiJc',
+        visible: true
+      },
+      {
+        number: 'XV',
+        name: 'Fort XV (Henryk Dąbrowski)',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_XV_Twierdzy_Toru%C5%84',
+        description: 'Zbudowany w latach 1881-1885, jest największym fortem toruńskim i pierwszym zaprojektowanym jako obiekt dwuwałowy: z wałem artyleryjskim oraz piechoty. Piechota musiała znajdować się na tyle wysoko, aby prowadzić ogień ponad murem fosy, a jednocześnie na tyle nisko, by pociski własnej artylerii nie stanowiły zagrożenia, co wymagało dopasowania wzajemnej wysokości obu wałów. Fort posiada również historię kolejnych obozów i miejsc internowania.',
+        attraction: '',
+        contact: 'Właściciel fortu',
+        contactUrl: 'https://www.facebook.com/Fort15Torun',
+        visitable: true,
+        address: 'Rypińska 10',
+        coords: [18.64791, 52.99963],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Twierdza_Torun_Fort_XV_%28babu2%29.jpg/250px-Twierdza_Torun_Fort_XV_%28babu2%29.jpg',
+        imageAttribution: 'https://commons.wikimedia.org/wiki/File:Twierdza_Torun_Fort_XV_%28babu2%29.jpg',
+        video: 'https://www.youtube.com/watch?v=yP3cMYhNtmk',
+        visible: true
+      },
+     {
+        number: 'XVI',
+        name: 'Fort Kolejowy',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_Kolejowy_w_Toruniu',
+        description: 'Wybudowany w latach 1863–1866, w celu zabezpieczenia linii kolejowej na granicy Prusy/Rosja. Ze względu na ograniczenia przestrzenne, fort miał kształt sześcioboku. {{Redita|redita}} była pozbawiona okien i wyposażona jedynie w strzelnice. W czasie pokoju służyła jako magazyn prochu. W latach 50. XX wieku podczas wysadzania obiektu, uszkodzeniu uległy pobliskie budynki mieszkalne i dzięki temu nie podjęto ryzyka wysadzania innych fortów. Z fortu, oprócz ruin, pozostała tylko studnia wraz z murem osłonowym.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Rudacka 15-23',
+        coords: [18.63419, 53.00471],
+        image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Twierdza_Torun_Fort_Kolejowy_%28babu2%29.jpg/250px-Twierdza_Torun_Fort_Kolejowy_%28babu2%29.jpg',
+        imageAttribution: 'https://pl.wikipedia.org/wiki/Fort_Kolejowy_w_Toruniu#/media/Plik:Twierdza_Torun_Fort_Kolejowy_%28babu2%29.jpg',
+        video: null,
+        visible: true
+      },
+     {
+        number: 'XVII',
+        name: 'Przyczółek Mostowy',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_Przycz%C3%B3%C5%82ek_Mostowy_w_Toruniu',
+        description: 'Wybudowany w latach 1824–1826, był pierwszym fortem typu {{reditowego|redita}} w Toruniu. Fort posiadał izbę chorych, warsztat szewski i krawiecki, oraz kuźnię. Nie zapewniał on jednak ochrony przeprawy przez Wisłę, i pomimo planów rozbudowy przyczółka w stronę rzeki, rozwój kolejnictwa w końcu XIX wieku spowodował jego częściowe rozebranie. W pozostałościach znajdowały się zakłady "Lacpol", widoczne do dziś naprzeciwko stacji Toruń Główny.',
+        attraction: '',
+        contact: null,
+        contactUrl: null,
+        visitable: false,
+        address: 'Podgórska 6/10',
+        coords: [18.61642, 52.99881],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Twierdza_Torun_Przyczolek_Mostowy_2011_%282%29.jpg/250px-Twierdza_Torun_Przyczolek_Mostowy_2011_%282%29.jpg',
+        imageAttribution: 'https://upload.wikimedia.org/wikipedia/commons/b/b3/Twierdza_Torun_Przyczolek_Mostowy_2011_%282%29.jpg',
+        video: null,
+        visible: true
+      },
+      {
+        number: 'XVIII',
+        name: 'Fort św. Jakuba',
+        nameUrl: 'https://pl.wikipedia.org/wiki/Fort_%C5%9Bw._Jakuba_w_Toruniu',
+        description: 'Wybudowany w latach 1828–1833, jest fortem typu {{reditowego|redita}}. Położony na Górze św. Jakuba, zabezpieczał przeprawę przez Wisłę. Ze względu na drewniane stropy oraz małą liczbę klatek schodowych, po tragicznym pożarze z roku 1849 wymagał przebudowy. W latach 20. XX wieku fort częściowo rozebrano, co dało zatrudnienie żołnierzom wojny polsko-bolszewickiej. Od lat 50. aż do roku 2018 redita, znana jako "Belweder", pełniła funkcje mieszkalne.',
+        attraction: '',
+        contact: 'Fort Jakuba Toruń',
+        contactUrl: 'https://www.facebook.com/fortjakubatorun/',
+        visitable: true,
+        address: 'Sowińskiego 9',
+        coords: [18.62133, 53.01325],
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Torun_Fort_Jakuba_01.jpg/250px-Torun_Fort_Jakuba_01.jpg',
+        imageAttribution: 'https://upload.wikimedia.org/wikipedia/commons/5/50/Torun_Fort_Jakuba_01.jpg',
+        video: null,
+        visible: true
+      }
+    ];
+
+    /** Expands every {{displayText|key}} marker in a fort's own description or
+     *  attraction text (see fortificationData's own comment on that syntax)
+     *  into a full glossary-term button, so appendFortSlide() below never
+     *  works with raw {{...}} text.
+     * @param {string} text - a fort's own description or attraction string.
+     * @returns {string} the same text with every marker replaced by
+     *   <button class="glossary-term">...</button> markup. */
+    function expandGlossaryMarkers(text) {
+      return text.replace(/\{\{([^|}]+)\|([^}]+)\}\}/g, function(match, displayText, key) {
+        const term = glossaryData[key];
+        return '<button class="glossary-term" onclick="openGlossaryPopup(this)">' + displayText +
+          '<span class="glossary-explanation" hidden>' + term.definition +
+          ' <a href="' + term.wikipediaUrl + '" target="_blank" rel="noopener noreferrer">Wikipedia</a></span></button>';
+      });
+    }
+
+    /** Opens the glossary popup for a clicked term button, copying that
+     *  term's own explanation (rendered into the button by
+     *  expandGlossaryMarkers() above, sourced from glossaryData) into the
+     *  shared overlay. */
+    function openGlossaryPopup(termButton) {
+      const explanation = termButton.querySelector('.glossary-explanation');
+      document.getElementById('glossary-content').innerHTML = explanation.innerHTML;
+      document.getElementById('glossary-overlay').classList.add('open');
+    }
+
+    function closeGlossaryPopup() {
+      document.getElementById('glossary-overlay').classList.remove('open');
+    }
+
+    document.getElementById('glossary-close').addEventListener('click', closeGlossaryPopup);
+    document.getElementById('glossary-backdrop').addEventListener('click', closeGlossaryPopup);
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') closeGlossaryPopup();
+    });
+    // Navigating away from the slide (map or another fort) closes any open
+    // popup rather than leaving it floating over unrelated content.
+    Reveal.addEventListener('slidechanged', closeGlossaryPopup);
+
+    /** Builds a Google Maps search URL for one fort's own coords, so Adres
+     *  can link out to a pin the visitor can get walking or driving
+     *  directions from, without this page choosing that travel mode itself.
+     *  coords is [longitude, latitude] (see fortificationData's own comment
+     *  on that field), reversed here because Google's own query parameter
+     *  expects latitude,longitude. */
+    function buildGoogleMapsUrl(coords) {
+      const [longitude, latitude] = coords;
+      return 'https://www.google.com/maps/search/?api=1&query=' + latitude + ',' + longitude;
+    }
+
+    /** Extracts the video ID from fort.video's own full YouTube watch URL, so
+     *  that one field drives both the thumbnail image below and the link it
+     *  opens, rather than storing the ID a second time in fortificationData. */
+    function getYouTubeVideoId(videoUrl) {
+      return new URL(videoUrl).searchParams.get('v');
+    }
+
+    /** Appends one <section class="fort-slide"> built from a fortificationData
+     *  entry to .reveal .slides, reusing the same CSS classes the slides used
+     *  when they were hand-written markup (see the CSS's own .fort-slide,
+     *  .fort-content, .fort-image, .fort-text, .fort-description, .fort-meta,
+     *  .fort-video-badge, and .fort-video-thumb rules). Must run before
+     *  Reveal.initialize(), which scans the DOM once for its own slide list
+     *  and does not pick up sections appended afterwards. */
+    function appendFortSlide(fort) {
+      // "Wymagany kontakt" rather than a plain "Tak" whenever a contact
+      // field exists, so Zwiedzanie says so directly.
+      const visitableClass = fort.visitable ? 'fort-visitable-yes' : 'fort-visitable-no';
+      const visitableText = fort.visitable
+        ? (fort.contact ? 'Wymagany kontakt' : 'Tak')
+        : 'Nie';
+
+      // fort.name/fort.contact stay the visible text either way; contactText only
+      // differs in whether that text is wrapped in an <a>, so a fort with no
+      // contactUrl still shows its contact string, just not as a link.
+      const nameText = fort.nameUrl
+        ? '<a href="' + fort.nameUrl + '" target="_blank" rel="noopener noreferrer">' + fort.name + '</a>'
+        : fort.name;
+      const contactText = fort.contact
+        ? (fort.contactUrl
+            ? '<a href="' + fort.contactUrl + '" target="_blank" rel="noopener noreferrer">' + fort.contact + '</a>'
+            : fort.contact)
+        : '';
+
+      const addressText = '<a href="' + buildGoogleMapsUrl(fort.coords) + '" target="_blank" rel="noopener noreferrer">' + fort.address + '</a>';
+
+      // Adres, Zwiedzanie, Kontakt (in that order): one plain column below
+      // the photo, all three sharing its own full width. The video thumbnail
+      // (see videoBadge below) is overlaid on the photo itself instead of
+      // sitting beside these lines, so none of them need to make room for it
+      // or align against it.
+      const metaLines =
+        '<p class="fort-meta"><strong>Adres:</strong> ' + addressText + '</p>' +
+        '<p class="fort-meta"><strong>Zwiedzanie:</strong> <span class="' + visitableClass + '">' + visitableText + '</span></p>' +
+        (fort.contact ? '<p class="fort-meta"><strong>Kontakt:</strong> ' + contactText + '</p>' : '');
+
+      // A plain thumbnail <img>, not an iframe: an embedded player's own
+      // initial "cued" state always draws a large play button centered over
+      // the whole frame, which covered the presenter's face on this
+      // project's own fort videos. The thumbnail carries no such overlay
+      // (see .fort-video-thumb's own comment for the corner .play-badge used
+      // instead), and the whole thing is one link, so no separate "watch on
+      // YouTube" text link is needed alongside it. Overlaid on the fort
+      // photo's own bottom-left corner (see .fort-video-badge's own comment
+      // for why), diagonal from the Wikimedia credit badge above.
+      const videoBadge = fort.video
+        ? '<div class="fort-video-badge">' +
+            '<p class="fort-video-label">YouTube</p>' +
+            '<a class="fort-video-thumb" href="' + fort.video + '" target="_blank" rel="noopener noreferrer">' +
+              '<img src="https://img.youtube.com/vi/' + getYouTubeVideoId(fort.video) + '/hqdefault.jpg" alt="Zobacz wideo: ' + fort.name + '">' +
+              '<span class="play-badge" aria-hidden="true">▶</span>' +
+            '</a>' +
+          '</div>'
+        : '';
+
+      document.querySelector('.reveal .slides').insertAdjacentHTML('beforeend',
+        '<section class="fort-slide">' +
+          '<button class="return-button" onclick="Reveal.slide(0)">← Wróć do mapy</button>' +
+          '<div class="fort-content">' +
+            '<div class="fort-image">' +
+              '<div class="fort-photo">' +
+                '<img src="' + fort.image + '" alt="' + fort.name + '">' +
+                '<p class="image-credit"><a href="' + fort.imageAttribution + '" target="_blank" rel="noopener noreferrer">Wikimedia</a></p>' +
+                videoBadge +
+              '</div>' +
+              metaLines +
+            '</div>' +
+            '<div class="fort-text">' +
+              '<h3>' + nameText + '</h3>' +
+              '<p class="fort-description">' + expandGlossaryMarkers(fort.description + ' ' + fort.attraction) + '</p>' +
+            '</div>' +
+          '</div>' +
+        '</section>'
+      );
+    }
+
+    // #map-slide's own <h2> is static markup, so unlike fort.description and
+    // fort.attraction above it never goes through expandGlossaryMarkers()
+    // via appendFortSlide(); expand its {{...}} markers here instead.
+    const mapSlideHeading = document.querySelector('#map-slide h2');
+    mapSlideHeading.innerHTML = expandGlossaryMarkers(mapSlideHeading.innerHTML);
+
+    // Slide 1 is the static #map-slide above; every fort slide from here on is
+    // appended in fortificationData's own I-XV order, filtered to the forts
+    // currently marked visible, so the slide count and each fort's own slide
+    // index both track fortificationData directly rather than a separate
+    // hardcoded count.
+    fortificationData
+      .filter(function(fort) { return fort.visible; })
+      .forEach(appendFortSlide);
+
+    Reveal.initialize({
+      // Read from the CSS custom property rather than a second literal
+      // copy of the same color, so --brown stays this page's own
+      // single source of truth for that color.
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--brown').trim(),
+      width: 1280,
+      height: 720,
+      margin: 0,
+      controls: true,
+      hash: true,
+      transition: 'fade',
+      center: false,
+      // Reveal.js's own touch: true default binds a swipe detector independent
+      // of the map's touchmove handling above, so dragging the map still reads
+      // as a slide-navigation swipe and changes slides. Navigation is already
+      // available via marker clicks, the return button, and the on-screen
+      // controls, so disabling swipe entirely has no functional cost.
+      touch: false
+    });
+
+    let mapInitialized = false;
+    // Nudged south of the fort ring's geographic middle so markers XI-XIII
+    // clear the attribution control below; further south clips marker V
+    // under the title instead.
+    const mapCenter = [18.63, 53.01];
+    // Halfway between the previous default (12) and one zoom level out (11),
+    // so the initial view sits between the two rather than matching either.
+    const mapInitialZoom = 11.5;
+
+    /** Moves .controls from its default position, a sibling of .slides, to
+     *  a child of .slides, so its arrows pick up the same CSS scale
+     *  transform as the fort title/return button (a transformed ancestor
+     *  becomes the containing block for a fixed-position descendant),
+     *  keeping their position and size in sync without duplicating Reveal's
+     *  own transform math in a separate formula. */
+    function moveControlsIntoSlides() {
+      const controls = document.querySelector('.reveal .controls');
+      const slides = document.querySelector('.reveal .slides');
+      if (controls && slides) slides.appendChild(controls);
+    }
+
+    /** Sets --map-counter-zoom on #map to the reciprocal of Reveal's current
+     *  CSS transform scale so that CSS zoom rules on MapLibre elements compensate
+     *  for the Reveal.js scale and maintain their intended physical pixel sizes. */
+    function updateMapCounterZoom() {
+      const mapElement = document.getElementById('map');
+      if (mapElement === null) return;
+      const scale = Reveal.getScale ? Reveal.getScale() : 1;
+      if (scale <= 0) return;
+      mapElement.style.setProperty('--map-counter-zoom', (1 / scale).toFixed(4));
+    }
+    /** @type {maplibregl.Map|null} Retained so event handlers outside initializeMap can call resize(). */
+    let libreMap = null;
+
+    function initializeMap() {
+      if (mapInitialized) return;
+
+      // maplibre-gl loads as an ES module (see the <script type="module"> above), which
+      // fetches and evaluates without blocking Reveal.initialize(); it can therefore
+      // still be loading when this first runs. Wait for the module's own
+      // 'maplibregl-ready' event rather than polling, then retry once, by which point
+      // `maplibregl` is guaranteed defined.
+      if (typeof maplibregl === 'undefined') {
+        window.addEventListener('maplibregl-ready', initializeMap, { once: true });
+        return;
+      }
+
+      mapInitialized = true;
+
+      const mapElement = document.getElementById('map');
+
+      if (!mapElement) {
+        console.error('Map element not found');
+        return;
+      }
+      updateMapCounterZoom();
+
+      const map = new maplibregl.Map({
+        container: 'map',
+        // OpenFreeMap (openfreemap.org) is a free, MIT-licensed vector tile
+        // service with no API key, no mandatory branding, and no usage cap.
+        // "liberty" keeps OpenFreeMap's classic OSM-style colors (unlike the
+        // grayscale "positron" style), matching the site owner's request for
+        // Leaflet-default-like colors; the layers hidden below are unrelated
+        // to this style choice (see the map.on('load', ...) comment below).
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: mapCenter,
+        zoom: mapInitialZoom,
+        minZoom: 11,
+        // The openmaptiles vector source's own maxzoom is 14 (confirmed via its
+        // TileJSON); maxZoom past that is overzoom, MapLibre magnifying the same
+        // zoom-14 tile rather than fetching more detail. One overzoom level (15)
+        // still renders cleanly; a second (16) doubles that magnification again
+        // and made symbol/label placement behave inconsistently on review.
+        maxZoom: 15,
+        attributionControl: false
+      });
+
+      libreMap = map;
+
+      // Hide vector tile layers not useful for locating a fortification: the
+      // underlying vector tiles carry every layer regardless of which ones
+      // are painted, so this reduces rendering work (paint/label-collision
+      // cost, most notably the 3D building extrusions), not network bytes.
+      // Roads (incl. street names, since a fort sits on an ordinary street
+      // a visitor needs to recognize), water, and city-level place labels
+      // stay visible for orientation; everything else here is either
+      // decorative clutter or irrelevant to reaching a fort by road. This
+      // list is longer than a comparable positron-style list would be
+      // (see README.md's MapLibre GL JS map setup section) because the
+      // "liberty" style itself defines roughly twice as many layers, which
+      // is also what gives it Leaflet-default-like colors instead of
+      // positron's grayscale minimalism.
+      map.on('load', function() {
+        const hiddenLayers = [
+          // building-3d (fill-extrusion) is hidden while its own real-device
+          // performance impact is being checked; plain 'building' footprints stay
+          // visible, only the extra extrusion/shading cost is removed here.
+          'building-3d',
+          'boundary_3', 'boundary_2', 'boundary_disputed',
+          'landuse_pitch', 'landuse_track', 'landuse_cemetery', 'landuse_hospital', 'landuse_school',
+          'road_area_pattern', 'road_one_way_arrow', 'road_one_way_arrow_opposite',
+          // poi_r1 (rank 1-6) is deliberately kept visible, not hidden here: each
+          // fort itself is tagged in OpenStreetMap as a rank-1 tourism attraction
+          // POI, so this is what shows the fort's own name on the map. poi_transit
+          // (airport/bus/rail transit points, including railway stations) is also
+          // kept visible. Only poi_r7/poi_r20 (lower-ranked generic POIs: shops,
+          // amenities, etc.) stay hidden as unrelated clutter.
+          'poi_r20', 'poi_r7',
+          'waterway_line_label',
+          'highway-name-path',
+          // label_village/label_town/label_country_* stay hidden (still too
+          // granular/irrelevant at this map's scale); label_other, railways, and
+          // the route-number shields were re-enabled after review to make the
+          // default view read as a fuller map instead of a stripped-down one:
+          // label_other carries district/neighbourhood names (everything except
+          // city/town/village/state/country, which have their own layers).
+          'label_village', 'label_town',
+          'label_country_3', 'label_country_2', 'label_country_1'
+        ];
+        hiddenLayers.forEach(function(layerId) {
+          map.setLayoutProperty(layerId, 'visibility', 'none');
+        });
+
+        // Temporary test: the style's own 'building' fill (hsl(35,8%,85%)) is close
+        // enough to the background/land color to be practically invisible now that
+        // building-3d above is hidden. Darkened here only to judge whether visible
+        // 2D building footprints are worth keeping at all, given this map's actual
+        // purpose (locating a fort), not a decision yet.
+        map.setPaintProperty('building', 'fill-color', 'hsl(35,20%,72%)');
+
+        // The style itself caps 'building' at maxzoom 14, hand-off to building-3d
+        // (minzoom 14) above that; with building-3d hidden, that hand-off left a
+        // gap where no buildings render at all past zoom 14. Overriding building's
+        // own zoom range keeps it rendering at every zoom instead, while this is
+        // still being evaluated.
+        map.setLayerZoomRange('building', 13, 24);
+      });
+
+      // Move attribution to bottom-left so it does not collide with any
+      // reveal.js navigation element that may appear at bottom-right.
+      // MapLibre GL JS does not add its own branding prefix to the attribution
+      // control, unlike some other map libraries, so no prefix removal step is
+      // needed: the default control is disabled above and this custom one added
+      // instead, with customAttribution for the extra forteczneforum.pl and
+      // marcindulak credits, plus a GDPR legal-basis line (see README's
+      // Attribution section for the rationale). customAttribution always
+      // joins before the style's own required attribution with no way to
+      // place content after it, so the legal-basis line goes first,
+      // followed by <br>, landing alone on the line above the rest.
+      map.addControl(new maplibregl.AttributionControl({
+        compact: false,
+        customAttribution: 'OpenFreeMap przetwarza adres IP by wyświetlić mapę (uzasadniony interes)<br>&copy; <a href="https://forteczneforum.pl/">forteczneforum.pl</a> | &copy; <a href="https://marcindulak.github.io">marcindulak</a>'
+      }), 'bottom-left');
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
+
+      // This is a static navigation map, not a 3D scene, so touch rotate and
+      // pitch add no value; left enabled, an imprecise two-finger touch that
+      // mixes zoom with rotation or tilt reads as an unintentional wiggle
+      // rather than a deliberate gesture. Pinch-to-zoom itself stays enabled;
+      // only the rotate and pitch portions of the combined touch handlers are
+      // turned off.
+      map.touchZoomRotate.disableRotation();
+      map.touchPitch.disable();
+
+      // Derived from fortificationData rather than a separate hardcoded list:
+      // slide indices start at 1 (slide 0 is the static #map-slide) and follow
+      // the same filtered I-XV order appendFortSlide() used to append each
+      // fort's own slide above, so a marker always points at the right slide
+      // regardless of how many forts are currently marked visible.
+      const locations = fortificationData
+        .filter(function(fort) { return fort.visible; })
+        .map(function(fort, index) {
+          return { number: fort.number, coords: fort.coords, slide: index + 1 };
+        });
+
+      // 0.001 degrees latitude is ~111 meters; see its use in addMarkers() below
+      // for why the marker box needs shifting away from each fort's coordinate.
+      const MARKER_LATITUDE_OFFSET_DEGREES = 0.001;
+
+      // Marker elements are recreated on resize with their size proportional to
+      // 1/Reveal.getScale() so their physical tap area stays ~44 px regardless
+      // of the Reveal transform scale.
+      let markerInstances = [];
+
+      function createLetterElement(number, scale) {
+        const size = Math.round(33 / scale);
+        const fontPx = Math.round(12 / scale);
+        const element = document.createElement('div');
+        element.className = 'fort-letter-box';
+        element.style.width = size + 'px';
+        element.style.height = size + 'px';
+        element.style.fontSize = fontPx + 'px';
+        element.textContent = number;
+        return element;
+      }
+
+      function addMarkers() {
+        markerInstances.forEach(function(m) { m.remove(); });
+        markerInstances = [];
+        const scale = Reveal.getScale ? Reveal.getScale() : 1;
+        locations.forEach(function(location) {
+          const element = createLetterElement(location.number, scale);
+          element.addEventListener('click', function() {
+            Reveal.slide(location.slide);
+          });
+          // Shifted north by a real-world distance, not a screen-pixel offset, so
+          // the box stays a consistent distance from each fort's own footprint at
+          // every zoom level and viewport size, clear of the OpenFreeMap POI label
+          // MapLibre renders at the fort's own coordinate (extending downward from
+          // it) once zoomed in enough to appear. location.coords itself is left
+          // untouched, since it is also used to link out to Google Maps.
+          const markerCoords = [location.coords[0], location.coords[1] + MARKER_LATITUDE_OFFSET_DEGREES];
+          const marker = new maplibregl.Marker({ element: element })
+            .setLngLat(markerCoords)
+            .addTo(map);
+          markerInstances.push(marker);
+        });
+      }
+
+      addMarkers();
+
+      // Orientation change or browser resize (e.g. mobile URL bar appearing/
+      // disappearing) causes MapLibre to lose track of its container dimensions.
+      // resize() forces MapLibre to recalculate and repaint tiles.
+      //
+      // On the DuckDuckGo Android browser (see its own toolbar-sliding quirk
+      // above), touching the map fires a burst of several `resize` events
+      // that all report the exact same window.innerWidth/innerHeight
+      // (confirmed on-device: scrollY stayed 0 throughout). Resetting the
+      // map's center/zoom on every one of those no-op events wiped out a
+      // user's pinch-zoom almost as soon as they made it. Comparing against
+      // the size seen at the last genuine reset skips the no-op events.
+      let lastMapResetWidth = null;
+      let lastMapResetHeight = null;
+      window.addEventListener('resize', function() {
+        if (!libreMap) return;
+        const currentSlide = Reveal.getCurrentSlide();
+        if (!currentSlide || currentSlide.id !== 'map-slide') return;
+        if (window.innerWidth === lastMapResetWidth && window.innerHeight === lastMapResetHeight) return;
+        lastMapResetWidth = window.innerWidth;
+        lastMapResetHeight = window.innerHeight;
+        updateMapCounterZoom();
+        libreMap.resize();
+        libreMap.jumpTo({ center: mapCenter, zoom: mapInitialZoom });
+        addMarkers();
+      });
+    }
+
+    Reveal.addEventListener('slidechanged', function(event) {
+      if (event.currentSlide && event.currentSlide.id === 'map-slide') {
+        initializeMap();
+        if (libreMap) {
+          // Recalculate the map container size after the slide transition, then
+          // reset to the original view without animation so the pan is not visible.
+          libreMap.resize();
+          libreMap.jumpTo({ center: mapCenter, zoom: mapInitialZoom });
+        }
+      }
+    });
+
+    Reveal.addEventListener('ready', function() {
+      moveControlsIntoSlides();
+      const currentSlide = Reveal.getCurrentSlide();
+      if (currentSlide && currentSlide.id === 'map-slide') {
+        initializeMap();
+      }
+      // Try to lock to landscape; silently fails on iOS and on Android outside
+      // fullscreen/PWA context, which is the expected result for a normal page.
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(function(error) {
+          console.log('Cannot lock orientation to landscape:', error);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
